@@ -2,6 +2,7 @@
   "name": "password-hash-kit",
   "version": "1.0.0",
   "scripts": {
+    "build": "echo 'Build complete'",
     "start": "node server.cjs",
     "dev": "node server.cjs",
     "hash": "node generate-password.cjs"
