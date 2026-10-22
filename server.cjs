@@ -51,9 +51,14 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`\n======================================================`);
-  console.log(`🚀 HashKit UI Server running at: http://localhost:${PORT}`);
-  console.log(`   Press Ctrl+C to stop`);
-  console.log(`======================================================\n`);
-});
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`\n======================================================`);
+    console.log(`🚀 HashKit UI Server running at: http://localhost:${PORT}`);
+    console.log(`   Press Ctrl+C to stop`);
+    console.log(`======================================================\n`);
+  });
+}
+
+module.exports = server;
+
