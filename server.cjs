@@ -17,7 +17,7 @@ const MIME_TYPES = {
   ".map": "application/json"
 };
 
-const server = http.createServer((req, res) => {
+const handleRequest = (req, res) => {
   let reqPath = decodeURI(req.url.split("?")[0]);
   if (reqPath === "/" || reqPath === "") {
     reqPath = "/index.html";
@@ -49,7 +49,9 @@ const server = http.createServer((req, res) => {
     const stream = fs.createReadStream(safePath);
     stream.pipe(res);
   });
-});
+};
+
+const server = http.createServer(handleRequest);
 
 if (require.main === module) {
   server.listen(PORT, () => {
@@ -60,5 +62,6 @@ if (require.main === module) {
   });
 }
 
-module.exports = server;
+module.exports = handleRequest;
+
 
