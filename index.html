@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HashKit — Bcrypt & Password Security Studio</title>
+  <meta name="description" content="Fast, offline-capable Bcrypt password hash generator, verifier, and inspector for developers and sysadmins.">
+  <link rel="stylesheet" href="style.css">
+  <!-- Standalone Bcrypt Engine (Offline & Hosting ready) -->
+  <script src="bcrypt.min.js"></script>
+  <!-- CDN Fallback in case standalone file is missing -->
+  <script>
+    if (typeof window.bcrypt === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/bcryptjs@3.0.3/umd/index.js"><\\/script>');
+    }
+  </script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <div class="brand-info">
+          <h1>
+            HashKit
+            <span class="brand-tag">v3.0.3 • Local</span>
+          </h1>
+          <p>Bcrypt Hash Generator, Verifier &amp; Security Inspector</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button id="themeToggleBtn" class="secondary-btn" title="Toggle Light / Dark mode" aria-label="Toggle theme">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <span>Theme</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="tab-navigation" role="tablist" aria-label="Tool selection">
+      <button class="tab-btn active" data-tab="generator" role="tab" aria-selected="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+        <span>Generator</span>
+      </button>
+      <button class="tab-btn" data-tab="verifier" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span>Verifier</span>
+      </button>
+      <button class="tab-btn" data-tab="inspector" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span>Inspector</span>
+      </button>
+      <button class="tab-btn" data-tab="pwdgen" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+        </svg>
+        <span>Password Generator</span>
+      </button>
+    </nav>
+
+    <!-- PANEL 1: GENERATOR -->
+    <section id="panel-generator" class="panel active" role="tabpanel">
+      <div class="form-group">
+        <div class="form-label">
+          <label for="genInput">Password to Hash</label>
+          <span class="label-hint">Ctrl + Enter to generate</span>
+        </div>
+        <div class="input-wrapper">
+          <input 
+            type="text" 
+            id="genInput" 
+            class="text-input" 
+            value="staffblue123" 
+            placeholder="Type or paste password..." 
+            autocomplete="off" 
+            spellcheck="false"
+          >
+          <div class="input-actions-inner">
+            <button id="toggleGenVisibility" class="icon-btn" title="Toggle visibility" aria-label="Toggle password visibility">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Strength Meter -->
+        <div class="strength-meter">
+          <div class="strength-bar-track" aria-hidden="true">
+            <div id="strengthBar" class="strength-bar-fill"></div>
+          </div>
+          <span id="strengthText" class="strength-text">Ready</span>
+        </div>
+      </div>
+
+      <!-- Cost / Rounds Slider -->
+      <div class="form-group">
+        <div class="form-label">
+          <span>Cost Factor (Salt Rounds)</span>
+          <span class="label-hint">Standard recommendation: 10</span>
+        </div>
+        <div class="cost-controls">
+          <div class="slider-container">
+            <div class="slider-header">
+              <span>Iterations: 2<sup><strong id="costDisplay">10</strong></sup></span>
+            </div>
+            <input type="range" id="costSlider" class="range-slider" min="4" max="14" value="10" step="1">
+          </div>
+          <div class="preset-pills">
+            <button class="preset-btn" data-cost="8" title="Fast (Testing)">8 Fast</button>
+            <button class="preset-btn active" data-cost="10" title="Recommended default">10 Default</button>
+            <button class="preset-btn" data-cost="12" title="High security (Production)">12 Secure</button>
+            <button class="preset-btn" data-cost="14" title="Strict security">14 Strict</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 16px;">
+        <button id="genSubmitBtn" class="primary-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span>Generate Hash</span>
+        </button>
+      </div>
+
+      <!-- Result Card -->
+      <div class="result-box">
+        <div class="result-header">
+          <span>Bcrypt Output Hash</span>
+          <div style="display: flex; gap: 6px;">
+            <button id="sendToVerifierBtn" class="secondary-btn" title="Send this hash into Verifier panel">
+              <span>Send to Verifier</span>
+            </button>
+            <button id="copyHashBtn" class="secondary-btn" title="Copy hash to clipboard">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copy</span>
+            </button>
+          </div>
+        </div>
+        <div class="result-output">
+          <span id="genOutput">Click generate to calculate bcrypt hash</span>
+        </div>
+        <div class="meta-stats">
+          <div class="stat-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span id="genTime">Ready</span>
+          </div>
+        </div>
+
+        <!-- Bcrypt Anatomy -->
+        <div id="anatomyCard" class="anatomy-card" style="display: none;">
+          <div class="anatomy-title">Bcrypt Hash Structure Breakdown</div>
+          <div class="anatomy-chunks">
+            <div class="chunk prefix">
+              <span class="chunk-label">Ident</span>
+              <span class="chunk-val" id="anatomyPrefix">$2b$</span>
+            </div>
+            <div class="chunk cost">
+              <span class="chunk-label">Cost</span>
+              <span class="chunk-val" id="anatomyCost">10</span>
+            </div>
+            <div class="chunk salt">
+              <span class="chunk-label">Salt (22 chars)</span>
+              <span class="chunk-val" id="anatomySalt">...</span>
+            </div>
+            <div class="chunk hash">
+              <span class="chunk-label">Checksum (31 chars)</span>
+              <span class="chunk-val" id="anatomyHash">...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Cryptographic Hashes for comparison -->
+        <div style="margin-top: 20px; border-top: 1px solid var(--border-subtle); padding-top: 14px;">
+          <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">
+            Standard Cryptographic Checksums (Reference)
+          </div>
+          <div class="other-hashes-grid">
+            <div class="other-hash-row">
+              <span class="other-hash-name">SHA-256</span>
+              <span id="sha256Output" class="other-hash-val">-</span>
+              <button class="icon-btn" onclick="copyToClipboard(document.getElementById('sha256Output').textContent)" title="Copy SHA-256">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </button>
+            </div>
+            <div class="other-hash-row">
+              <span class="other-hash-name">SHA-512</span>
+              <span id="sha512Output" class="other-hash-val">-</span>
+              <button class="icon-btn" onclick="copyToClipboard(document.getElementById('sha512Output').textContent)" title="Copy SHA-512">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </button>
+            </div>
+            <div class="other-hash-row">
+              <span class="other-hash-name">MD5</span>
+              <span id="md5Output" class="other-hash-val">-</span>
+              <button class="icon-btn" onclick="copyToClipboard(document.getElementById('md5Output').textContent)" title="Copy MD5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL 2: VERIFIER -->
+    <section id="panel-verifier" class="panel" role="tabpanel">
+      <div class="form-group">
+        <label class="form-label" for="verifyPassInput">Plaintext Password</label>
+        <div class="input-wrapper">
+          <input type="text" id="verifyPassInput" class="text-input" placeholder="Enter plaintext password to verify...">
+          <div class="input-actions-inner">
+            <button id="toggleVerifyVisibility" class="icon-btn" title="Toggle visibility">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">
+          <label for="verifyHashInput">Existing Bcrypt Hash String</label>
+          <button id="pasteHashBtn" class="secondary-btn" style="padding: 2px 8px; font-size: 0.75rem;">
+            <span>Paste Clipboard</span>
+          </button>
+        </div>
+        <input type="text" id="verifyHashInput" class="text-input mono" placeholder="$2b$10$...">
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 16px;">
+        <button id="verifySubmitBtn" class="primary-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <span>Verify Hash</span>
+        </button>
+      </div>
+
+      <!-- Result Banner -->
+      <div id="verifyResultBanner" class="verification-banner" style="display: none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <div class="banner-content">
+          <h4 id="verifyTitle">Status</h4>
+          <p id="verifyDesc">Description details will appear here.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL 3: INSPECTOR -->
+    <section id="panel-inspector" class="panel" role="tabpanel">
+      <div class="form-group">
+        <label class="form-label" for="inspectInput">Paste Bcrypt Hash to Analyze</label>
+        <div class="input-wrapper">
+          <input type="text" id="inspectInput" class="text-input mono" placeholder="$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy">
+        </div>
+      </div>
+
+      <div style="margin-top: 12px; margin-bottom: 20px;">
+        <button id="inspectBtn" class="primary-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span>Deconstruct &amp; Analyze</span>
+        </button>
+      </div>
+
+      <div id="inspectResult" class="result-box" style="display: none;">
+        <div class="result-header">
+          <span>Hash Diagnostics</span>
+          <span id="inspectValid" style="font-weight: 600;">Valid</span>
+        </div>
+        
+        <div style="display: grid; gap: 10px; margin-top: 10px;">
+          <div class="other-hash-row">
+            <span class="other-hash-name">Algorithm</span>
+            <span id="inspectVer" class="other-hash-val">-</span>
+            <span style="font-size:0.75rem; color:var(--text-muted)">Prefix</span>
+          </div>
+          <div class="other-hash-row">
+            <span class="other-hash-name">Cost Factor</span>
+            <span id="inspectCost" class="other-hash-val">-</span>
+            <span id="inspectRoundsCount" style="font-size:0.75rem; color:var(--text-muted)">-</span>
+          </div>
+          <div class="other-hash-row">
+            <span class="other-hash-name">Salt</span>
+            <span id="inspectSalt" class="other-hash-val">-</span>
+            <span style="font-size:0.75rem; color:var(--text-muted)">128-bit (22 chars)</span>
+          </div>
+          <div class="other-hash-row">
+            <span class="other-hash-name">Checksum</span>
+            <span id="inspectChecksum" class="other-hash-val">-</span>
+            <span style="font-size:0.75rem; color:var(--text-muted)">184-bit (31 chars)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL 4: PASSWORD GENERATOR -->
+    <section id="panel-pwdgen" class="panel" role="tabpanel">
+      <div class="form-group">
+        <label class="form-label">Generated Password</label>
+        <div class="input-wrapper">
+          <input type="text" id="pwGenOutput" class="text-input mono" readonly>
+          <div class="input-actions-inner">
+            <button id="pwGenCopyBtn" class="icon-btn" title="Copy to clipboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+            <button id="pwGenRegenBtn" class="icon-btn" title="Regenerate">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="slider-header" style="margin-bottom: 6px;">
+          <span style="font-size:0.8125rem; font-weight:500; color:var(--text-secondary)">Length: <strong id="pwGenLengthVal">16</strong></span>
+        </div>
+        <input type="range" id="pwGenLength" class="range-slider" min="8" max="64" value="16">
+      </div>
+
+      <div class="generator-options">
+        <label class="checkbox-label">
+          <input type="checkbox" id="pwGenLower" checked>
+          <span>Lowercase (a-z)</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="pwGenUpper" checked>
+          <span>Uppercase (A-Z)</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="pwGenNums" checked>
+          <span>Numbers (0-9)</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="pwGenSyms" checked>
+          <span>Symbols (!@#$%)</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="pwGenExclude">
+          <span>Exclude ambiguous (l, 1, O, 0)</span>
+        </label>
+      </div>
+
+      <button id="pwGenUseBtn" class="primary-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+        <span>Use This in Hash Generator</span>
+      </button>
+    </section>
+
+    <!-- History Log Section -->
+    <section class="history-section">
+      <div class="history-header">
+        <h3>Recent Operations</h3>
+        <button id="clearHistoryBtn" class="secondary-btn" style="padding: 4px 8px; font-size: 0.75rem;">Clear</button>
+      </div>
+      <div id="historyList" class="history-list">
+        <!-- populated dynamically -->
+      </div>
+    </section>
+  </div>
+
+  <!-- Toast notification banner -->
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+    <span id="toastMsg">Action completed</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
